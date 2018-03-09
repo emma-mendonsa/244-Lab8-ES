@@ -108,9 +108,76 @@ all_ppp <- ppp(spill_ppp$x, spill_ppp$y, window = tx_owin)
 
 ```
 
+###A density plot
 
+```{r}
 
+plot(density(all_ppp, sigma = 0.4)) #sigma changes the density scale/intensity
 
+```
+
+###Quadrat test for spatial evenness
+```{r}
+
+#this test evaluated the quadrats and uses chi-squared test to determine if oil spill events are proportional in distribution or not
+
+#H0: data is distributed as CSR (totally random)
+
+oil_qt <- quadrat.test(all_ppp, nx = 5, ny = 5) #nx = 5 is how many regions exist horizontally, ny = vertical regions
+oil_qt
+
+#These results show they are not randomly distributed. Reject H0
+
+```
+ 
+```{r}
+
+plot(all_ppp)
+plot(oil_qt, add = TRUE, cex = 0.4)
+
+#there are little numbers in each quadrant. if a quadrant isn't whole, then the upper L is actual counts; upper R is expected counts for whole square; bottom # is the standardized metric for the difference between expected count and actual count
+
+```
+
+###G-Function for Nearest Neighbor Analysis
+
+```{r}
+
+r <- seq(0,1, by = 0.01)
+
+#based on a plasun distribution and recognizing the winder you've created, what would this data look like if it was truely CSR data
+
+oil_gfun <- envelope(all_ppp, fun = Gest, r = r, nsim = 100) #Gest is the estimation of G, nsim = #of simulations
+
+#this is pretty quick b/c its just looking at the single distance between each point and its nearest neighbor
+
+#table: theo - theoretical values based on simulation; lo & hi give you the confidence intervals
+
+ggplot(oil_gfun, aes(x = r, y = obs))+
+  geom_line(color = "black")+
+  geom_line(aes(x = r, y = theo), color = "red")+
+  theme_classic()
+
+#This plot tells us that our data has a higher proportion of point pairs with nearest neighbors at shorter distances compared to CSR data. Meaning that the nearest neighbor distances are closer than expected for randomly (CSR) distributed data. So this data is more clustered 
+
+```
+
+###Nearest neighbor using the L-function (Ripley's K, standardized)
+
+```{r}
+
+r2 <- seq(0,3, by = 0.5) #this is saying the sequence will go from 0 to 3, with increments of 0.5
+
+oil_lfun <- envelope(all_ppp, fun = Lest, r = r2, nsim = 20, global = TRUE) #This only involves 20 simulations b/c it takes long. in a real project you would want to do more
+
+ggplot(oil_lfun, aes(x = r2, y = obs))+
+  geom_line(color = "black")+
+  geom_line(aes(x = r2, y = theo), color = "blue")+
+  theme_classic()
+
+#this story is the same as G (as it should)
+
+```
 
 
 
